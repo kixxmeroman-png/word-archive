@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>수집서</title>
+  <!-- Pretendard 폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+            original: ['Pretendard', 'Consolas', 'Courier New', 'Microsoft YaHei', 'SimSun', 'Meiryo', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Pretendard', sans-serif;
+    }
+    .font-original {
+      font-family: 'Pretendard', 'Consolas', 'Courier New', 'Microsoft YaHei', 'SimSun', 'Meiryo', monospace;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen font-sans transition-colors duration-200">
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 border-b border-slate-200 dark:border-slate-800 pb-6">
+      <div>
+        <h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">수집서</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">단어를 수집하세요.</p>
+      </div>
+      
+      <!-- Top Actions -->
+      <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        <!-- Theme Toggle -->
+        <button id="themeToggleBtn" class="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="테마 전환">
+          <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+          <i data-lucide="moon" class="w-5 h-5 block dark:hidden"></i>
+        </button>
+
+        <!-- Flashcard Mode Toggle -->
+        <button id="flashcardToggleBtn" class="h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="뜻 가리기 암기 모드">
+          <i data-lucide="eye-off" class="w-5 h-5"></i>
+        </button>
+
+        <div class="h-6 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1"></div>
+
+        <!-- Data Import Open Modal Button -->
+        <button id="openImportModalBtn" class="h-10 px-3 flex items-center justify-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-sm font-medium">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          <span>가져오기</span>
+        </button>
+
+        <!-- Data Export Open Modal Button -->
+        <button id="openExportModalBtn" class="h-10 px-3 flex items-center justify-center gap-2 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-sm font-medium">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>내보내기</span>
+        </button>
+
+        <!-- Add Word Button -->
+        <button id="openAddModalBtn" class="h-10 px-4 flex items-center justify-center gap-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition text-sm font-medium">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>새 단어 추가</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Layout Grid (Sidebar + Content) -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      <!-- Sidebar (Categories & Tags) -->
+      <aside class="space-y-6">
+        <!-- Sidebar Categories -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="folder" class="w-4 h-4 text-slate-500"></i> 카테고리
+            </h2>
+            <button id="openCatManageModalBtn" class="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center gap-1" title="카테고리 편집">
+              <i data-lucide="settings-2" class="w-3.5 h-3.5"></i> 관리
+            </button>
+          </div>
+          <div id="sidebarCatList" class="space-y-1 max-h-60 overflow-y-auto custom-scrollbar">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Sidebar Tags -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <h2 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <i data-lucide="tag" class="w-4 h-4 text-slate-500"></i> 태그 목록
+            </h2>
+            <button id="resetTagBtn" class="text-xs text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hidden">초기화</button>
+          </div>
+          <div id="sidebarTagList" class="flex flex-wrap gap-1.5 max-h-64 overflow-y-auto custom-scrollbar">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Area -->
+      <main class="lg:col-span-3 space-y-6">
+        
+        <!-- Search & Filter Controls Bar -->
+        <div class="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+          
+          <!-- Search Input -->
+          <div class="relative flex-1">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="searchInput" placeholder="단어, 한자/원어, 뜻, 예문, 태그 검색..." class="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600">
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- Category Filter Dropdown -->
+            <select id="categoryFilter" class="py-2 pl-3 pr-8 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none">
+              <option value="ALL">전체 카테고리</option>
+            </select>
+
+            <!-- Sort Filter -->
+            <select id="sortFilter" class="py-2 pl-3 pr-8 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 focus:outline-none">
+              <option value="NEWEST">최신순</option>
+              <option value="OLDEST">오래된순</option>
+              <option value="NAME">단어 이름순</option>
+            </select>
+
+            <!-- Favorite Only Button -->
+            <button id="favOnlyBtn" class="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-400 hover:text-amber-500 transition" title="중요 단어만 보기">
+              <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+            </button>
+
+            <!-- View Mode Switcher -->
+            <div class="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 p-0.5">
+              <button id="viewGridBtn" class="p-1.5 rounded text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-sm" title="카드 뷰">
+                <i data-lucide="grid" class="w-4 h-4"></i>
+              </button>
+              <button id="viewListBtn" class="p-1.5 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white" title="리스트 뷰">
+                <i data-lucide="list" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <!-- Grid Column Controller (Grid view only) -->
+            <div id="gridColControl" class="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg bg-slate-50 dark:bg-slate-950 p-0.5">
+              <button data-cols="2" class="col-btn px-2 py-1 text-xs font-medium rounded text-slate-500 hover:text-slate-900 dark:hover:text-white">2열</button>
+              <button data-cols="3" class="col-btn px-2 py-1 text-xs font-medium rounded text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-sm">3열</button>
+              <button data-cols="4" class="col-btn px-2 py-1 text-xs font-medium rounded text-slate-500 hover:text-slate-900 dark:hover:text-white">4열</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Words List Container & Empty State Wrapper -->
+        <div class="relative min-h-[200px]">
+          <!-- Words Container -->
+          <div id="wordsContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Word items rendered here -->
+          </div>
+
+          <!-- Empty State (Aligned to top) -->
+          <div id="emptyState" class="hidden text-center py-16 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 w-full">
+            <i data-lucide="book-open" class="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-3"></i>
+            <p class="text-slate-500 dark:text-slate-400 font-medium">등록된 단어가 없거나 검색 결과가 없습니다.</p>
+            <p class="text-xs text-slate-400 dark:text-slate-600 mt-1">새로운 단어를 추가해보세요!</p>
+          </div>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Word Detail Modal -->
+  <div id="detailModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-xl w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-start gap-4">
+        <div class="space-y-1.5 flex-1 min-w-0">
+          <span id="detailCategory" class="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">카테고리</span>
+          <h2 id="detailTitle" class="text-2xl font-bold text-slate-900 dark:text-white break-words">단어명</h2>
+          <p id="detailOriginal" class="text-sm text-slate-500 dark:text-slate-400 font-original break-words">한자/원어</p>
+        </div>
+        
+        <div class="flex items-center gap-1 shrink-0">
+          <button id="detailFavBtn" class="p-1.5 text-slate-300 hover:text-amber-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+            <i data-lucide="star" class="w-5 h-5 fill-current"></i>
+          </button>
+          <button id="closeDetailModalBtn" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+        <div>
+          <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">뜻 / 의미</h4>
+          <p id="detailMeaning" class="text-base text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed"></p>
+        </div>
+        
+        <div id="detailExampleWrapper">
+          <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">예문</h4>
+          <p id="detailExample" class="text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800/80 leading-relaxed"></p>
+        </div>
+
+        <div id="detailDescriptionWrapper">
+          <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">추가 설명</h4>
+          <p id="detailDescription" class="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line leading-relaxed bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800/80"></p>
+        </div>
+
+        <div id="detailUrlsWrapper">
+          <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">관련 링크 (URL)</h4>
+          <ul id="detailUrlList" class="space-y-1.5"></ul>
+        </div>
+
+        <div id="detailTagsWrapper">
+          <h4 class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">태그</h4>
+          <div id="detailTagsList" class="flex flex-wrap gap-1"></div>
+        </div>
+      </div>
+      <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end gap-2">
+        <button id="deleteWordBtn" class="px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition">삭제</button>
+        <button id="editWordBtn" class="px-4 py-2 text-sm font-medium bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-lg transition">수정</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Word Form Modal (Add / Edit) -->
+  <div id="formModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-lg w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <h3 id="formModalTitle" class="text-lg font-bold text-slate-900 dark:text-white">새 단어 추가</h3>
+        <button id="closeFormModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <form id="wordForm" class="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+        <input type="hidden" id="wordId">
+        
+        <div class="flex items-end justify-between gap-3">
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">단어 <span class="text-red-500">*</span></label>
+            <input type="text" id="formTerm" required class="w-full h-[38px] px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400">
+          </div>
+          <div>
+            <button type="button" id="formFavBtn" class="w-[38px] h-[38px] flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-lg text-slate-300 hover:text-amber-500 transition" title="중요 단어 설정">
+              <i data-lucide="star" class="w-5 h-5 fill-current"></i>
+            </button>
+            <input type="checkbox" id="formFavorite" class="hidden">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">한자 / 원어 (선택)</label>
+          <input type="text" id="formOriginal" placeholder="예: 漢字, Etymology" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 font-original">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">카테고리</label>
+          <select id="formCategory" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none">
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">뜻 / 의미 <span class="text-red-500">*</span></label>
+          <textarea id="formMeaning" required rows="2" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">예문 (선택)</label>
+          <textarea id="formExample" rows="2" placeholder="단어가 사용된 실제 예문을 입력하세요." class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">추가 설명 (선택)</label>
+          <textarea id="formDescription" rows="3" placeholder="상세 설명, 유의어, 배경지식 등을 입력하세요." class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400"></textarea>
+        </div>
+
+        <div>
+          <div class="flex justify-between items-center mb-1">
+            <label class="text-xs font-medium text-slate-600 dark:text-slate-400">관련 URL 목록</label>
+            <button type="button" id="addUrlInputBtn" class="text-xs text-slate-600 dark:text-slate-400 hover:underline flex items-center gap-1">
+              <i data-lucide="plus-circle" class="w-3 h-3"></i> URL 추가
+            </button>
+          </div>
+          <div id="urlInputsContainer" class="space-y-2">
+            <!-- URL input rows -->
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">태그 (쉼표로 구분)</label>
+          <input type="text" id="formTags" placeholder="예: 기초, 필수, IT, 경제" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" id="cancelFormBtn" class="px-4 py-2 text-sm font-medium border border-slate-200 dark:border-slate-800 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">취소</button>
+          <button type="submit" class="px-4 py-2 text-sm font-medium bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-lg transition">저장하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Import Option Choice Modal -->
+  <div id="importModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-sm w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-5">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i data-lucide="upload" class="w-4 h-4"></i> 데이터 가져오기
+        </h3>
+        <button id="closeImportModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">가져올 파일의 포맷 형태를 선택하세요.</p>
+      
+      <div class="space-y-2">
+        <label class="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="file-json" class="w-5 h-5 text-slate-700 dark:text-slate-300"></i>
+            <div>
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">JSON 파일</p>
+              <p class="text-[11px] text-slate-400">단어장 백업 전체 복원</p>
+            </div>
+          </div>
+          <input type="file" id="importJsonInput" accept=".json" class="hidden">
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+        </label>
+
+        <label class="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-slate-700 dark:text-slate-300"></i>
+            <div>
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">CSV 파일</p>
+              <p class="text-[11px] text-slate-400">엑셀/스프레드시트 단어 목록 파일</p>
+            </div>
+          </div>
+          <input type="file" id="importCsvInput" accept=".csv" class="hidden">
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Option Choice Modal -->
+  <div id="exportModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-sm w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden p-5">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <i data-lucide="download" class="w-4 h-4"></i> 데이터 내보내기
+        </h3>
+        <button id="closeExportModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">내보낼 파일의 포맷을 선택하세요.</p>
+
+      <div class="space-y-2">
+        <button id="exportJsonOptionBtn" class="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="file-json" class="w-5 h-5 text-slate-700 dark:text-slate-300"></i>
+            <div>
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">JSON 저장</p>
+              <p class="text-[11px] text-slate-400">완벽 백업 및 다른 기기 이전용</p>
+            </div>
+          </div>
+          <i data-lucide="download" class="w-4 h-4 text-slate-400"></i>
+        </button>
+
+        <button id="exportCsvOptionBtn" class="w-full flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="file-spreadsheet" class="w-5 h-5 text-slate-700 dark:text-slate-300"></i>
+            <div>
+              <p class="text-sm font-semibold text-slate-900 dark:text-white">CSV 저장</p>
+              <p class="text-[11px] text-slate-400">엑셀(Excel)열람 및 테이블 저장용</p>
+            </div>
+          </div>
+          <i data-lucide="download" class="w-4 h-4 text-slate-400"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Management Modal -->
+  <div id="catManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 rounded-xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
+      <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">카테고리 관리</h3>
+        <button id="closeCatManageModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <!-- Add Category Form -->
+        <div class="flex gap-2">
+          <input type="text" id="newCatInput" placeholder="새 카테고리 이름" class="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none">
+          <button id="addCatBtn" class="px-3 py-2 text-sm font-medium bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-lg transition whitespace-nowrap">추가</button>
+        </div>
+
+        <!-- Category List -->
+        <div class="space-y-1 max-h-60 overflow-y-auto custom-scrollbar" id="catListContainer">
+          <!-- Categories with delete buttons -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // App State
+    let words = JSON.parse(localStorage.getItem('my_vocab_words') || '[]');
+    let categories = JSON.parse(localStorage.getItem('my_vocab_categories') || '["IT", "시사", "디자인", "일반"]');
+    let activeTag = null;
+    let activeCategory = 'ALL';
+    let isFavOnly = false;
+    let isFlashcardMode = false;
+    let currentView = 'grid'; // 'grid' | 'list'
+    let gridCols = 3;
+    let selectedWordId = null;
+
+    // Default Sample Data if Empty
+    if (words.length === 0) {
+      words = [
+        {
+          id: '1',
+          term: 'API',
+          original: 'Application Programming Interface',
+          category: 'IT',
+          meaning: '응용 프로그램에서 데이터를 주고받기 위한 매개체 및 규격.',
+          example: '날씨 정보를 가져오기 위해 공공 API를 연결했다.',
+          description: '서버와 클라이언트 간의 통신 규칙을 정의하는 인터페이스 역할을 합니다.',
+          urls: [{ label: '위키백과 API 문서', url: 'https://ko.wikipedia.org/wiki/API' }],
+          tags: ['개발', '네트워크', '기초'],
+          favorite: true,
+          createdAt: Date.now() - 100000
+        },
+        {
+          id: '2',
+          term: '가스라이팅',
+          original: 'Gaslighting',
+          category: '시사',
+          meaning: '타인의 심리나 상황을 교묘하게 조작해 심리적 지배력을 강화하는 행위.',
+          example: '상대방의 기억을 자꾸 의심하게 만드는 가스라이팅 언행에 주의해야 한다.',
+          description: '영화 <가스등(Gaslight)>에서 유래된 심리학적 용어입니다.',
+          urls: [],
+          tags: ['심리학', '시사용어'],
+          favorite: false,
+          createdAt: Date.now() - 50000
+        }
+      ];
+      saveWords();
+    }
+
+    // Storage Functions
+    function saveWords() {
+      localStorage.setItem('my_vocab_words', JSON.stringify(words));
+    }
+    function saveCategories() {
+      localStorage.setItem('my_vocab_categories', JSON.stringify(categories));
+    }
+
+    // DOM Elements
+    const wordsContainer = document.getElementById('wordsContainer');
+    const emptyState = document.getElementById('emptyState');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const sortFilter = document.getElementById('sortFilter');
+    const favOnlyBtn = document.getElementById('favOnlyBtn');
+    const flashcardToggleBtn = document.getElementById('flashcardToggleBtn');
+    const viewGridBtn = document.getElementById('viewGridBtn');
+    const viewListBtn = document.getElementById('viewListBtn');
+    const gridColControl = document.getElementById('gridColControl');
+    const sidebarCatList = document.getElementById('sidebarCatList');
+    const sidebarTagList = document.getElementById('sidebarTagList');
+    const resetTagBtn = document.getElementById('resetTagBtn');
+
+    // Modals
+    const detailModal = document.getElementById('detailModal');
+    const formModal = document.getElementById('formModal');
+    const catManageModal = document.getElementById('catManageModal');
+    const importModal = document.getElementById('importModal');
+    const exportModal = document.getElementById('exportModal');
+
+    // Theme Management
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    themeToggleBtn.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      document.documentElement.classList.toggle('light');
+    });
+
+    // Initialize UI
+    function init() {
+      renderCategoryOptions();
+      renderSidebarCategories();
+      renderSidebarTags();
+      renderWords();
+      lucide.createIcons();
+    }
+
+    // Category Options Render (Select)
+    function renderCategoryOptions() {
+      categoryFilter.innerHTML = '<option value="ALL">전체 카테고리</option>';
+      const formCat = document.getElementById('formCategory');
+      formCat.innerHTML = '';
+
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        categoryFilter.appendChild(opt);
+
+        const formOpt = document.createElement('option');
+        formOpt.value = cat;
+        formOpt.textContent = cat;
+        formCat.appendChild(formOpt);
+      });
+      categoryFilter.value = activeCategory;
+    }
+
+    // Sidebar Category List Render
+    function renderSidebarCategories() {
+      sidebarCatList.innerHTML = '';
+      
+      const allBtn = document.createElement('button');
+      const isAllActive = activeCategory === 'ALL';
+      allBtn.className = `w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition ${
+        isAllActive ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+      }`;
+      allBtn.innerHTML = `<span>전체 보기</span><span class="text-[10px] opacity-70">${words.length}</span>`;
+      allBtn.onclick = () => {
+        activeCategory = 'ALL';
+        categoryFilter.value = 'ALL';
+        renderSidebarCategories();
+        renderWords();
+      };
+      sidebarCatList.appendChild(allBtn);
+
+      categories.forEach(cat => {
+        const count = words.filter(w => w.category === cat).length;
+        const btn = document.createElement('button');
+        const isActive = activeCategory === cat;
+        btn.className = `w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between transition ${
+          isActive ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+        }`;
+        btn.innerHTML = `<span class="truncate">${cat}</span><span class="text-[10px] opacity-70">${count}</span>`;
+        btn.onclick = () => {
+          activeCategory = cat;
+          categoryFilter.value = cat;
+          renderSidebarCategories();
+          renderWords();
+        };
+        sidebarCatList.appendChild(btn);
+      });
+    }
+
+    // Sidebar Tags List Render
+    function renderSidebarTags() {
+      const tagMap = new Map();
+      words.forEach(w => {
+        if (w.tags) {
+          w.tags.forEach(t => tagMap.set(t, (tagMap.get(t) || 0) + 1));
+        }
+      });
+
+      sidebarTagList.innerHTML = '';
+
+      if (tagMap.size === 0) {
+        sidebarTagList.innerHTML = '<span class="text-xs text-slate-400">등록된 태그 없음</span>';
+        resetTagBtn.classList.add('hidden');
+        return;
+      }
+
+      resetTagBtn.classList.toggle('hidden', !activeTag);
+      resetTagBtn.onclick = () => {
+        activeTag = null;
+        renderSidebarTags();
+        renderWords();
+      };
+
+      tagMap.forEach((count, tag) => {
+        const btn = document.createElement('button');
+        const isActive = activeTag === tag;
+        btn.className = `px-2 py-1 text-xs rounded-md border transition ${
+          isActive 
+            ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border-transparent font-medium' 
+            : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-400 bg-slate-50 dark:bg-slate-950'
+        }`;
+        btn.innerHTML = `#${tag} <span class="text-[10px] opacity-60">(${count})</span>`;
+        btn.onclick = () => {
+          activeTag = isActive ? null : tag;
+          renderSidebarTags();
+          renderWords();
+        };
+        sidebarTagList.appendChild(btn);
+      });
+    }
+
+    // Render Words List
+    function renderWords() {
+      const query = searchInput.value.toLowerCase().trim();
+      const sort = sortFilter.value;
+
+      let filtered = words.filter(w => {
+        if (isFavOnly && !w.favorite) return false;
+        if (activeCategory !== 'ALL' && w.category !== activeCategory) return false;
+        if (activeTag && (!w.tags || !w.tags.includes(activeTag))) return false;
+
+        if (query) {
+          const matchTerm = w.term.toLowerCase().includes(query);
+          const matchOrig = (w.original || '').toLowerCase().includes(query);
+          const matchMeaning = w.meaning.toLowerCase().includes(query);
+          const matchEx = (w.example || '').toLowerCase().includes(query);
+          const matchTags = w.tags && w.tags.some(t => t.toLowerCase().includes(query));
+          return matchTerm || matchOrig || matchMeaning || matchEx || matchTags;
+        }
+        return true;
+      });
+
+      // Sorting
+      filtered.sort((a, b) => {
+        if (sort === 'NEWEST') return b.createdAt - a.createdAt;
+        if (sort === 'OLDEST') return a.createdAt - b.createdAt;
+        if (sort === 'NAME') return a.term.localeCompare(b.term, 'ko');
+      });
+
+      wordsContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      // Grid classes setup
+      if (currentView === 'grid') {
+        wordsContainer.className = 'grid gap-4';
+        if (gridCols == 2) wordsContainer.classList.add('grid-cols-1', 'md:grid-cols-2');
+        else if (gridCols == 3) wordsContainer.classList.add('grid-cols-1', 'md:grid-cols-3');
+        else if (gridCols == 4) wordsContainer.classList.add('grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-4');
+      } else {
+        wordsContainer.className = 'flex flex-col gap-3';
+      }
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = currentView === 'grid' 
+          ? 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-400 dark:hover:border-slate-600 transition cursor-pointer shadow-sm'
+          : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 hover:border-slate-400 dark:hover:border-slate-600 transition cursor-pointer shadow-sm flex flex-col gap-3';
+
+        card.onclick = (e) => {
+          if (e.target.closest('.fav-toggle-btn')) return;
+          openDetailModal(item.id);
+        };
+
+        const tagHtml = (item.tags || []).map(t => `<span class="text-[11px] text-slate-500 dark:text-slate-400">#${t}</span>`).join(' ');
+
+        if (currentView === 'grid') {
+          card.innerHTML = `
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${item.category || '기타'}</span>
+                <button class="fav-toggle-btn inline-flex items-center text-slate-300 hover:text-amber-500 ${item.favorite ? 'text-amber-500' : ''}" data-id="${item.id}">
+                  <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                </button>
+              </div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white leading-tight break-words">${item.term}</h3>
+              ${item.original ? `<p class="text-xs font-original text-slate-400 mb-2 break-words">${item.original}</p>` : '<div class="mb-2"></div>'}
+              <p class="text-sm text-slate-600 dark:text-slate-300 line-clamp-3 mb-3 ${isFlashcardMode ? 'blur-sm select-none hover:blur-none transition' : ''}">${item.meaning}</p>
+            </div>
+            <div class="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 dark:border-slate-800/60">
+              ${tagHtml || '<span class="text-[11px] text-slate-300 dark:text-slate-700">태그 없음</span>'}
+            </div>
+          `;
+        } else {
+          card.innerHTML = `
+            <div class="grid grid-cols-[180px_1fr] items-start gap-4 w-full">
+              <!-- Left Column: Star + Term + Original -->
+              <div class="min-w-0 flex items-start gap-2">
+                <button class="fav-toggle-btn inline-flex items-center text-slate-300 hover:text-amber-500 mt-0.5 shrink-0 ${item.favorite ? 'text-amber-500' : ''}" data-id="${item.id}">
+                  <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                </button>
+                <div class="min-w-0 flex-1">
+                  <span class="font-bold text-slate-900 dark:text-white text-base leading-snug break-words block">${item.term}</span>
+                  ${item.original ? `<span class="text-xs font-original text-slate-400 break-words block mt-0.5">${item.original}</span>` : ''}
+                </div>
+              </div>
+
+              <!-- Right Column: Meaning -->
+              <div class="text-sm text-slate-600 dark:text-slate-300 leading-snug break-words pt-0.5 ${isFlashcardMode ? 'blur-sm select-none hover:blur-none transition' : ''}">
+                ${item.meaning}
+              </div>
+            </div>
+
+            <!-- List Item Bottom Bar: Category Badge + Tag List -->
+            <div class="flex items-center gap-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/60">
+              <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">${item.category || '기타'}</span>
+              <div class="flex items-center gap-2 flex-wrap min-w-0">
+                ${tagHtml || '<span class="text-[11px] text-slate-300 dark:text-slate-700">태그 없음</span>'}
+              </div>
+            </div>
+          `;
+        }
+
+        wordsContainer.appendChild(card);
+      });
+
+      // Favorite Button Handlers
+      document.querySelectorAll('.fav-toggle-btn').forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.getAttribute('data-id');
+          const target = words.find(w => w.id === id);
+          if (target) {
+            target.favorite = !target.favorite;
+            saveWords();
+            renderWords();
+          }
+        };
+      });
+
+      lucide.createIcons();
+    }
+
+    // Detail Modal Handlers
+    function openDetailModal(id) {
+      const item = words.find(w => w.id === id);
+      if (!item) return;
+      selectedWordId = id;
+
+      document.getElementById('detailCategory').textContent = item.category || '기타';
+      document.getElementById('detailTitle').textContent = item.term;
+      document.getElementById('detailOriginal').textContent = item.original || '';
+      document.getElementById('detailMeaning').textContent = item.meaning;
+
+      const exWrap = document.getElementById('detailExampleWrapper');
+      if (item.example) {
+        exWrap.classList.remove('hidden');
+        document.getElementById('detailExample').textContent = item.example;
+      } else {
+        exWrap.classList.add('hidden');
+      }
+
+      const descWrap = document.getElementById('detailDescriptionWrapper');
+      if (item.description) {
+        descWrap.classList.remove('hidden');
+        document.getElementById('detailDescription').textContent = item.description;
+      } else {
+        descWrap.classList.add('hidden');
+      }
+
+      const urlsWrap = document.getElementById('detailUrlsWrapper');
+      const urlList = document.getElementById('detailUrlList');
+      urlList.innerHTML = '';
+      if (item.urls && item.urls.length > 0) {
+        urlsWrap.classList.remove('hidden');
+        item.urls.forEach(u => {
+          const li = document.createElement('li');
+          li.innerHTML = `<a href="${u.url}" target="_blank" class="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white underline flex items-center gap-1">
+            <i data-lucide="external-link" class="w-3 h-3"></i> ${u.label || u.url}
+          </a>`;
+          urlList.appendChild(li);
+        });
+      } else {
+        urlsWrap.classList.add('hidden');
+      }
+
+      const tagsWrap = document.getElementById('detailTagsWrapper');
+      const tagsList = document.getElementById('detailTagsList');
+      tagsList.innerHTML = '';
+      if (item.tags && item.tags.length > 0) {
+        tagsWrap.classList.remove('hidden');
+        item.tags.forEach(t => {
+          const span = document.createElement('span');
+          span.className = 'px-2 py-0.5 text-xs rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400';
+          span.textContent = `#${t}`;
+          tagsList.appendChild(span);
+        });
+      } else {
+        tagsWrap.classList.add('hidden');
+      }
+
+      const favBtn = document.getElementById('detailFavBtn');
+      favBtn.className = item.favorite ? 'p-1.5 text-amber-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800' : 'p-1.5 text-slate-300 hover:text-amber-500 transition rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800';
+      favBtn.onclick = () => {
+        item.favorite = !item.favorite;
+        saveWords();
+        openDetailModal(id);
+        renderWords();
+      };
+
+      detailModal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    document.getElementById('closeDetailModalBtn').onclick = () => detailModal.classList.add('hidden');
+    document.getElementById('deleteWordBtn').onclick = () => {
+      if (confirm('이 단어를 삭제하시겠습니까?')) {
+        words = words.filter(w => w.id !== selectedWordId);
+        saveWords();
+        detailModal.classList.add('hidden');
+        renderSidebarTags();
+        renderSidebarCategories();
+        renderWords();
+      }
+    };
+    document.getElementById('editWordBtn').onclick = () => {
+      detailModal.classList.add('hidden');
+      openFormModal(selectedWordId);
+    };
+
+    // Form Modal Handlers
+    function openFormModal(id = null) {
+      renderCategoryOptions();
+      const form = document.getElementById('wordForm');
+      form.reset();
+      document.getElementById('urlInputsContainer').innerHTML = '';
+
+      if (id) {
+        const item = words.find(w => w.id === id);
+        document.getElementById('formModalTitle').textContent = '단어 수정';
+        document.getElementById('wordId').value = item.id;
+        document.getElementById('formTerm').value = item.term;
+        document.getElementById('formOriginal').value = item.original || '';
+        document.getElementById('formCategory').value = item.category || categories[0];
+        document.getElementById('formMeaning').value = item.meaning;
+        document.getElementById('formExample').value = item.example || '';
+        document.getElementById('formDescription').value = item.description || '';
+        document.getElementById('formTags').value = (item.tags || []).join(', ');
+        
+        setFormFavorite(item.favorite);
+
+        if (item.urls && item.urls.length > 0) {
+          item.urls.forEach(u => addUrlInputRow(u.label, u.url));
+        } else {
+          addUrlInputRow();
+        }
+      } else {
+        document.getElementById('formModalTitle').textContent = '새 단어 추가';
+        document.getElementById('wordId').value = '';
+        setFormFavorite(false);
+        addUrlInputRow();
+      }
+
+      formModal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function setFormFavorite(isFav) {
+      const formFavBtn = document.getElementById('formFavBtn');
+      const formFavorite = document.getElementById('formFavorite');
+      formFavorite.checked = isFav;
+      if (isFav) {
+        formFavBtn.className = 'w-[38px] h-[38px] flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-lg text-amber-500 transition';
+      } else {
+        formFavBtn.className = 'w-[38px] h-[38px] flex items-center justify-center border border-slate-200 dark:border-slate-800 rounded-lg text-slate-300 hover:text-amber-500 transition';
+      }
+    }
+
+    document.getElementById('formFavBtn').onclick = () => {
+      const formFavorite = document.getElementById('formFavorite');
+      setFormFavorite(!formFavorite.checked);
+    };
+
+    function addUrlInputRow(label = '', url = '') {
+      const container = document.getElementById('urlInputsContainer');
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-2 url-row';
+      row.innerHTML = `
+        <input type="text" placeholder="링크 이름" value="${label}" class="w-1/3 px-2 py-1.5 text-xs rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+        <input type="url" placeholder="https://..." value="${url}" class="flex-1 px-2 py-1.5 text-xs rounded border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+        <button type="button" class="remove-url-btn text-slate-400 hover:text-red-500 p-1">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+        </button>
+      `;
+      row.querySelector('.remove-url-btn').onclick = () => row.remove();
+      container.appendChild(row);
+      lucide.createIcons();
+    }
+
+    document.getElementById('addUrlInputBtn').onclick = () => addUrlInputRow();
+    document.getElementById('openAddModalBtn').onclick = () => openFormModal();
+    document.getElementById('closeFormModalBtn').onclick = () => formModal.classList.add('hidden');
+    document.getElementById('cancelFormBtn').onclick = () => formModal.classList.add('hidden');
+
+    document.getElementById('wordForm').onsubmit = (e) => {
+      e.preventDefault();
+      const id = document.getElementById('wordId').value;
+      const term = document.getElementById('formTerm').value.trim();
+      const original = document.getElementById('formOriginal').value.trim();
+      const category = document.getElementById('formCategory').value;
+      const meaning = document.getElementById('formMeaning').value.trim();
+      const example = document.getElementById('formExample').value.trim();
+      const description = document.getElementById('formDescription').value.trim();
+      const favorite = document.getElementById('formFavorite').checked;
+
+      const tagInput = document.getElementById('formTags').value;
+      const tags = tagInput.split(',').map(t => t.trim()).filter(t => t.length > 0);
+
+      const urls = [];
+      document.querySelectorAll('.url-row').forEach(row => {
+        const inputs = row.querySelectorAll('input');
+        const l = inputs[0].value.trim();
+        const u = inputs[1].value.trim();
+        if (u) urls.push({ label: l || u, url: u });
+      });
+
+      let targetId = id;
+
+      if (id) {
+        const item = words.find(w => w.id === id);
+        if (item) {
+          item.term = term;
+          item.original = original;
+          item.category = category;
+          item.meaning = meaning;
+          item.example = example;
+          item.description = description;
+          item.urls = urls;
+          item.tags = tags;
+          item.favorite = favorite;
+        }
+      } else {
+        targetId = Date.now().toString();
+        words.unshift({
+          id: targetId,
+          term,
+          original,
+          category,
+          meaning,
+          example,
+          description,
+          urls,
+          tags,
+          favorite,
+          createdAt: Date.now()
+        });
+      }
+
+      saveWords();
+      formModal.classList.add('hidden');
+      renderSidebarTags();
+      renderSidebarCategories();
+      renderWords();
+
+      openDetailModal(targetId);
+    };
+
+    // Category Management Modal Handlers
+    document.getElementById('openCatManageModalBtn').onclick = () => {
+      renderCatManageList();
+      catManageModal.classList.remove('hidden');
+    };
+    document.getElementById('closeCatManageModalBtn').onclick = () => catManageModal.classList.add('hidden');
+
+    function renderCatManageList() {
+      const container = document.getElementById('catListContainer');
+      container.innerHTML = '';
+      categories.forEach((cat, index) => {
+        const div = document.createElement('div');
+        div.className = 'flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-sm';
+        div.innerHTML = `
+          <span class="text-slate-800 dark:text-slate-200 font-medium">${cat}</span>
+          <button class="delete-cat-btn text-slate-400 hover:text-red-500 transition" data-index="${index}">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        `;
+        container.appendChild(div);
+      });
+
+      document.querySelectorAll('.delete-cat-btn').forEach(btn => {
+        btn.onclick = () => {
+          const idx = parseInt(btn.getAttribute('data-index'));
+          const targetCat = categories[idx];
+          if (confirm(`'${targetCat}' 카테고리를 삭제하시겠습니까?`)) {
+            categories.splice(idx, 1);
+            saveCategories();
+            renderCatManageList();
+            renderCategoryOptions();
+            renderSidebarCategories();
+            renderWords();
+          }
+        };
+      });
+      lucide.createIcons();
+    }
+
+    document.getElementById('addCatBtn').onclick = () => {
+      const input = document.getElementById('newCatInput');
+      const val = input.value.trim();
+      if (val && !categories.includes(val)) {
+        categories.push(val);
+        saveCategories();
+        input.value = '';
+        renderCatManageList();
+        renderCategoryOptions();
+        renderSidebarCategories();
+      }
+    };
+
+    // Filter Listeners
+    searchInput.oninput = () => renderWords();
+    categoryFilter.onchange = (e) => { 
+      activeCategory = e.target.value; 
+      renderSidebarCategories();
+      renderWords(); 
+    };
+    sortFilter.onchange = () => renderWords();
+
+    // Favorite Only Button Switch Toggle Visual
+    favOnlyBtn.onclick = () => {
+      isFavOnly = !isFavOnly;
+      if (isFavOnly) {
+        favOnlyBtn.className = 'h-9 w-9 flex items-center justify-center rounded-lg border border-transparent bg-amber-500 text-white shadow-sm transition';
+      } else {
+        favOnlyBtn.className = 'h-9 w-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-400 hover:text-amber-500 transition';
+      }
+      renderWords();
+    };
+
+    // Flashcard Toggle Button Switch Toggle Visual
+    flashcardToggleBtn.onclick = () => {
+      isFlashcardMode = !isFlashcardMode;
+      if (isFlashcardMode) {
+        flashcardToggleBtn.className = 'h-10 w-10 flex items-center justify-center rounded-lg border border-transparent bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 shadow-sm transition';
+      } else {
+        flashcardToggleBtn.className = 'h-10 w-10 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition';
+      }
+      renderWords();
+    };
+
+    // View Switchers
+    viewGridBtn.onclick = () => {
+      currentView = 'grid';
+      viewGridBtn.className = 'p-1.5 rounded text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-sm';
+      viewListBtn.className = 'p-1.5 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white';
+      gridColControl.classList.remove('hidden');
+      renderWords();
+    };
+
+    viewListBtn.onclick = () => {
+      currentView = 'list';
+      viewListBtn.className = 'p-1.5 rounded text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-sm';
+      viewGridBtn.className = 'p-1.5 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white';
+      gridColControl.classList.add('hidden');
+      renderWords();
+    };
+
+    // Grid Column Buttons
+    document.querySelectorAll('.col-btn').forEach(btn => {
+      btn.onclick = () => {
+        gridCols = parseInt(btn.getAttribute('data-cols'));
+        document.querySelectorAll('.col-btn').forEach(b => {
+          b.className = 'col-btn px-2 py-1 text-xs font-medium rounded text-slate-500 hover:text-slate-900 dark:hover:text-white';
+        });
+        btn.className = 'col-btn px-2 py-1 text-xs font-medium rounded text-slate-900 dark:text-white bg-white dark:bg-slate-800 shadow-sm';
+        renderWords();
+      };
+    });
+
+    // Modal Control: Import / Export
+    document.getElementById('openImportModalBtn').onclick = () => importModal.classList.remove('hidden');
+    document.getElementById('closeImportModalBtn').onclick = () => importModal.classList.add('hidden');
+    document.getElementById('openExportModalBtn').onclick = () => exportModal.classList.remove('hidden');
+    document.getElementById('closeExportModalBtn').onclick = () => exportModal.classList.add('hidden');
+
+    // JSON Export / CSV Export
+    document.getElementById('exportJsonOptionBtn').onclick = () => {
+      exportModal.classList.add('hidden');
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({ words, categories }, null, 2));
+      downloadFile(dataStr, `my_vocab_backup_${getTodayStr()}.json`);
+    };
+
+    document.getElementById('exportCsvOptionBtn').onclick = () => {
+      exportModal.classList.add('hidden');
+      let csvContent = "\uFEFF"; // UTF-8 BOM for Excel compatibility
+      csvContent += "단어,원어/한자,카테고리,뜻/의미,예문,추가설명,관련URL,태그,중요여부\n";
+
+      words.forEach(w => {
+        const urlStr = (w.urls || []).map(u => u.url).join(';');
+        const tagStr = (w.tags || []).join(';');
+        
+        const row = [
+          escapeCsvField(w.term),
+          escapeCsvField(w.original || ''),
+          escapeCsvField(w.category || ''),
+          escapeCsvField(w.meaning || ''),
+          escapeCsvField(w.example || ''),
+          escapeCsvField(w.description || ''),
+          escapeCsvField(urlStr),
+          escapeCsvField(tagStr),
+          w.favorite ? 'Y' : 'N'
+        ];
+        csvContent += row.join(',') + "\n";
+      });
+
+      const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+      downloadFile(encodedUri, `my_vocab_list_${getTodayStr()}.csv`);
+    };
+
+    function escapeCsvField(field) {
+      if (!field) return '""';
+      let str = String(field).replace(/"/g, '""');
+      return `"${str}"`;
+    }
+
+    function getTodayStr() {
+      return new Date().toISOString().slice(0,10);
+    }
+
+    function downloadFile(uri, filename) {
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", uri);
+      downloadAnchor.setAttribute("download", filename);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // JSON Import
+    document.getElementById('importJsonInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (imported.words && Array.isArray(imported.words)) {
+            words = imported.words;
+            if (imported.categories) categories = imported.categories;
+            saveWords();
+            saveCategories();
+            init();
+            importModal.classList.add('hidden');
+            alert('성공적으로 JSON 데이터를 불러왔습니다!');
+          }
+        } catch (err) {
+          alert('JSON 파일을 읽는 중 오류가 발생했습니다.');
+        }
+      };
+      reader.readAsText(file);
+    };
+
+    // CSV Import
+    document.getElementById('importCsvInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const csvText = event.target.result;
+          const parsedWords = parseCsvToWords(csvText);
+          if (parsedWords.length > 0) {
+            words = [...parsedWords, ...words]; // Prepends parsed words
+            
+            // Add new categories automatically
+            parsedWords.forEach(pw => {
+              if (pw.category && !categories.includes(pw.category)) {
+                categories.push(pw.category);
+              }
+            });
+
+            saveWords();
+            saveCategories();
+            init();
+            importModal.classList.add('hidden');
+            alert(`총 ${parsedWords.length}개의 단어를 CSV에서 추가했습니다!`);
+          } else {
+            alert('유효한 단어 데이터를 CSV에서 찾지 못했습니다.');
+          }
+        } catch (err) {
+          alert('CSV 파일을 해석하는 중 오류가 발생했습니다.');
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    };
+
+    // Helper: Simple CSV Parser handling quotes
+    function parseCsvToWords(text) {
+      const lines = [];
+      let row = [''];
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i+1];
+
+        if (c === '"') {
+          if (inQuotes && next === '"') {
+            row[row.length - 1] += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          row.push('');
+        } else if ((c === '\r' || c === '\n') && !inQuotes) {
+          if (c === '\r' && next === '\n') { i++; }
+          lines.push(row);
+          row = [''];
+        } else {
+          row[row.length - 1] += c;
+        }
+      }
+      if (row.length > 1 || row[0] !== '') lines.push(row);
+
+      if (lines.length < 2) return [];
+
+      const result = [];
+      // Skip Header (row 0)
+      for (let i = 1; i < lines.length; i++) {
+        const r = lines[i];
+        if (!r[0] && !r[3]) continue; // Skip empty rows lacking term/meaning
+
+        const urls = r[6] ? r[6].split(';').map(u => ({ label: u.trim(), url: u.trim() })).filter(u => u.url) : [];
+        const tags = r[7] ? r[7].split(';').map(t => t.trim()).filter(t => t) : [];
+
+        result.push({
+          id: (Date.now() + i).toString(),
+          term: (r[0] || '').trim(),
+          original: (r[1] || '').trim(),
+          category: (r[2] || '일반').trim(),
+          meaning: (r[3] || '').trim(),
+          example: (r[4] || '').trim(),
+          description: (r[5] || '').trim(),
+          urls: urls,
+          tags: tags,
+          favorite: (r[8] || '').trim().toUpperCase() === 'Y',
+          createdAt: Date.now() - i
+        });
+      }
+      return result;
+    }
+
+    // App Run
+    init();
+  </script>
+</body>
+</html>
