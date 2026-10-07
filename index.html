@@ -10,6 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SortableJS (Drag & Drop) -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -414,7 +416,6 @@
   </div>
 
   <!-- Category Management Modal -->
-<!-- Category Management Modal -->
   <div id="catManageModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-white dark:bg-slate-900 rounded-xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
       <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
@@ -430,17 +431,9 @@
           <button id="addCatBtn" class="px-3 py-2 text-sm font-medium bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 rounded-lg transition whitespace-nowrap">추가</button>
         </div>
 
-        <!-- Category List -->
+        <!-- Category List Container -->
         <div class="space-y-1 max-h-60 overflow-y-auto custom-scrollbar" id="catListContainer">
-          <!-- Categories with move & delete buttons -->
-        </div>
-      </div>
-    </div>
-  </div>
-
-        <!-- Category List -->
-        <div class="space-y-1 max-h-60 overflow-y-auto custom-scrollbar" id="catListContainer">
-          <!-- Categories with delete buttons -->
+          <!-- Categories with drag handle, move & delete buttons rendered by JS -->
         </div>
       </div>
     </div>
@@ -996,11 +989,17 @@
     function renderCatManageList() {
       const container = document.getElementById('catListContainer');
       container.innerHTML = '';
+      
       categories.forEach((cat, index) => {
         const div = document.createElement('div');
-        div.className = 'flex items-center justify-between p-2 rounded border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-sm';
+        div.className = 'flex items-center justify-between p-2.5 rounded border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-sm select-none';
+        div.setAttribute('data-index', index);
         div.innerHTML = `
-          <span class="text-slate-800 dark:text-slate-200 font-medium truncate flex-1 pr-2">${cat}</span>
+          <div class="flex items-center gap-2 flex-1 min-w-0">
+            <!-- 드래그 핸들 아이콘 -->
+            <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-grab active:cursor-grabbing shrink-0"></i>
+            <span class="text-slate-800 dark:text-slate-200 font-medium truncate">${cat}</span>
+          </div>
           <div class="flex items-center gap-1 shrink-0">
             <!-- 위로 이동 -->
             <button class="move-up-cat-btn text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 disabled:opacity-30 disabled:cursor-not-allowed" data-index="${index}" ${index === 0 ? 'disabled' : ''} title="위로 이동">
@@ -1018,6 +1017,27 @@
         `;
         container.appendChild(div);
       });
+
+      // SortableJS 드래그 앤 드롭 연결
+      if (window.Sortable) {
+        new Sortable(container, {
+          handle: '.drag-handle',
+          animation: 150,
+          ghostClass: 'opacity-40',
+          onEnd: function (evt) {
+            const oldIndex = evt.oldIndex;
+            const newIndex = evt.newIndex;
+            if (oldIndex !== newIndex && oldIndex !== undefined && newIndex !== undefined) {
+              const movedCat = categories.splice(oldIndex, 1)[0];
+              categories.splice(newIndex, 0, movedCat);
+              saveCategories();
+              renderCatManageList();
+              renderCategoryOptions();
+              renderSidebarCategories();
+            }
+          }
+        });
+      }
 
       // 위로 이동 버튼 이벤트
       document.querySelectorAll('.move-up-cat-btn').forEach(btn => {
@@ -1066,6 +1086,7 @@
           }
         };
       });
+
       lucide.createIcons();
     }
 
